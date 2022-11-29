@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Hosting;
+using PostStoreApi.Migrations;
+using Microsoft.EntityFrameworkCore;
 
 namespace PostStoreApi.Controllers
 {
@@ -19,14 +22,17 @@ namespace PostStoreApi.Controllers
         private readonly IPostRepository _PostRepository;
         private readonly IStringLocalizer<PostController> _stringLocalizer;
         private readonly IStringLocalizer<SharedResource> _sharedLocalizer;
+        private readonly IWebHostEnvironment _hostEnvironment;
 
         public PostController(IPostRepository PostRepository,
             IStringLocalizer<PostController> stringLocalizer,
-            IStringLocalizer<SharedResource> _sharedLocalizer)
+            IStringLocalizer<SharedResource> _sharedLocalizer,
+            IWebHostEnvironment hostEnvironment)
         {
             _PostRepository = PostRepository;
             _stringLocalizer = stringLocalizer;
             this._sharedLocalizer = _sharedLocalizer;
+            _hostEnvironment = hostEnvironment;
         }
 
         [HttpGet]
@@ -83,15 +89,27 @@ namespace PostStoreApi.Controllers
         //[ProducesResponseType(statusCode: 200, type:typeof(Post))]
         public async Task<IActionResult> Post([FromForm] PostDto Post)
         {
+
+
+            var uploadFolder = Path.Combine(_hostEnvironment.WebRootPath, "Images");
+            var uniqueName = Guid.NewGuid().ToString() + Path.GetExtension(Post.Image.FileName);
+            // ->0f8fad5b-d9cb-469f-a165-70867728950e.jpg
+
+            var filePath = Path.Combine(uploadFolder, uniqueName);
+
+            //webserver/Images/0f8fad5b-d9cb-469f-a165-70867728950e.jpg
+            Post.Image.CopyTo(new FileStream(filePath, FileMode.Create));
+
             var PostResult = await _PostRepository.Add(new Post
             {
                 Title = Post.Title,
                 Description = Post.Description,
                 UserId = Post.UserId,
-                Imagepath = Path.Combine(Post.Image),
+                Imagepath = uniqueName,
                 Ts = DateTime.Now,
                 Published = true
             });
+
             //return Ok(PostResult);
             //return CreatedAtRoute("GetPostById", new { id = PostResult.Id }, PostResult);
             return CreatedAtAction(nameof(Get), new { id = PostResult.Id }, PostResult);
