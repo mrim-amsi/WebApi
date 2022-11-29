@@ -12,10 +12,11 @@ namespace PostStoreApi.Models
         //[Column(Order = 3)]
         public string Title { get; set; } = null!;
 
-        //public string TitleAr12 { get; set; } = "fsh";
-
-        //[Column(Order = 2)]
-        //public string Description { get; set; }
+        public int UserId { get; set; }
+        public string Description { get; set; }
+        public string Imagepath { get; set; } = "";
+        public DateTime Ts { get; set; }
+        public bool Published { get; set; }
 
     }
 }

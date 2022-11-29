@@ -76,12 +76,22 @@ namespace PostStoreApi.Controllers
         /// <param name="Post"> Post </param>
         /// <returns></returns>
         /// <response code="201">Successfully Added newly Post</response>
-        [HttpPost("addpost")]
-        [Consumes("application/json")]
+
+        [HttpPost]
+        [Route("")]
+        [RequestSizeLimit(5 * 1024 * 1024)]
         //[ProducesResponseType(statusCode: 200, type:typeof(Post))]
-        public async Task<IActionResult> Post([FromBody] PostDto Post)
+        public async Task<IActionResult> Post([FromForm] PostDto Post)
         {
-            var PostResult = await _PostRepository.Add(new Post { Title = Post.Title });
+            var PostResult = await _PostRepository.Add(new Post
+            {
+                Title = Post.Title,
+                Description = Post.Description,
+                UserId = Post.UserId,
+                Imagepath = Path.Combine(Post.Image),
+                Ts = DateTime.Now,
+                Published = true
+            });
             //return Ok(PostResult);
             //return CreatedAtRoute("GetPostById", new { id = PostResult.Id }, PostResult);
             return CreatedAtAction(nameof(Get), new { id = PostResult.Id }, PostResult);
